@@ -1,0 +1,7 @@
+{
+  "name": "web-gba",
+  "compatibility_date": "2026-07-19",
+  "assets": {
+    "directory": "./dist"
+  }
+}

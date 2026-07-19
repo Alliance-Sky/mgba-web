@@ -80,3 +80,4 @@ dist-ssr/
 # Agent files
 .agents/
 .gemini/
+skills-lock.json
