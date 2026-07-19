@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- Definitions for gradients and shadows -->
+  <defs>
+    <!-- Background Gradient for GBA Shell -->
+    <linearGradient id="shellGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8A2BE2" />
+      <stop offset="50%" stop-color="#6A0DAD" />
+      <stop offset="100%" stop-color="#4B0082" />
+    </linearGradient>
+    
+    <!-- Screen Bezel Gradient -->
+    <linearGradient id="bezelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2D2D30" />
+      <stop offset="100%" stop-color="#1E1E1F" />
+    </linearGradient>
+
+    <!-- Screen Glass / LCD Gradient -->
+    <linearGradient id="screenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1A3B2B" />
+      <stop offset="100%" stop-color="#0F241A" />
+    </linearGradient>
+
+    <!-- Screen Gloss Overlay -->
+    <linearGradient id="glossGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.15" />
+      <stop offset="40%" stop-color="#ffffff" stop-opacity="0.0" />
+    </linearGradient>
+
+    <!-- Shoulder Buttons -->
+    <linearGradient id="shoulderGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#E5E5E5" />
+      <stop offset="100%" stop-color="#999999" />
+    </linearGradient>
+
+    <!-- Shadow Filter -->
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="4" flood-color="#000000" flood-opacity="0.4" />
+    </filter>
+  </defs>
+
+  <!-- L and R Shoulder Buttons -->
+  <path d="M 60 140 C 60 100, 110 90, 150 90 L 150 120 C 120 120, 90 125, 90 140 Z" fill="url(#shoulderGrad)" />
+  <path d="M 452 140 C 452 100, 402 90, 362 90 L 362 120 C 392 120, 422 125, 422 140 Z" fill="url(#shoulderGrad)" />
+
+  <!-- Main GBA Console Shell -->
+  <rect x="40" y="120" width="432" height="272" rx="70" fill="url(#shellGrad)" filter="url(#shadow)" />
+
+  <!-- Side Grips -->
+  <path d="M 40 200 C 55 220, 55 290, 40 310" fill="none" stroke="#520785" stroke-width="6" stroke-linecap="round" />
+  <path d="M 472 200 C 457 220, 457 290, 472 310" fill="none" stroke="#520785" stroke-width="6" stroke-linecap="round" />
+
+  <!-- Screen Bezel -->
+  <rect x="120" y="145" width="272" height="210" rx="15" fill="url(#bezelGrad)" />
+  
+  <!-- Screen Display -->
+  <rect x="145" y="165" width="222" height="165" rx="5" fill="url(#screenGrad)" />
+  
+  <!-- Screen Gloss Overlay -->
+  <path d="M 145 165 L 367 165 L 145 330 Z" fill="url(#glossGrad)" />
+  
+  <!-- Speaker Grille -->
+  <g fill="#2D2D30">
+    <circle cx="370" cy="360" r="3" />
+    <circle cx="380" cy="360" r="3" />
+    <circle cx="390" cy="360" r="3" />
+    <circle cx="375" cy="370" r="3" />
+    <circle cx="385" cy="370" r="3" />
+  </g>
+
+  <!-- D-Pad -->
+  <g fill="#1A1A1A">
+    <path d="M 80 236 C 80 233, 83 230, 86 230 L 94 230 C 97 230, 100 233, 100 236 L 100 244 L 108 244 C 111 244, 114 247, 114 250 L 114 258 C 114 261, 111 264, 108 264 L 100 264 L 100 272 C 100 275, 97 278, 94 278 L 86 278 C 83 278, 80 275, 80 272 L 80 264 L 72 264 C 69 264, 66 261, 66 258 L 66 250 C 66 247, 69 244, 72 244 L 80 244 Z" />
+    <circle cx="90" cy="254" r="5" fill="#0D0D0D" />
+  </g>
+
+  <!-- Action Buttons A & B -->
+  <rect x="390" y="225" width="62" height="32" rx="16" transform="rotate(-25 421 241)" fill="#440066" opacity="0.6" />
+  <circle cx="405" cy="254" r="14" fill="#CC0000" />
+  <text x="405" y="259" font-family="Arial, sans-serif" font-weight="bold" font-size="14" fill="#FFFFFF" text-anchor="middle">B</text>
+  <circle cx="437" cy="239" r="14" fill="#CC0000" />
+  <text x="437" y="244" font-family="Arial, sans-serif" font-weight="bold" font-size="14" fill="#FFFFFF" text-anchor="middle">A</text>
+
+  <!-- Power LED -->
+  <circle cx="365" cy="155" r="4" fill="#00FF00" />
+
+  <!-- Start / Select Buttons -->
+  <g fill="#7A7A7A" transform="rotate(-20 90 340)">
+    <rect x="75" y="325" width="22" height="7" rx="3.5" />
+    <rect x="105" y="325" width="22" height="7" rx="3.5" />
+  </g>
+</svg>

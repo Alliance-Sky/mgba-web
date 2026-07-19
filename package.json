@@ -1,0 +1,36 @@
+{
+  "name": "web-gba",
+  "version": "0.1.0",
+  "description": "A web-based Game Boy Advance emulator",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "gba",
+    "emulator",
+    "gameboy-advance",
+    "mgba",
+    "wasm",
+    "webassembly",
+    "react",
+    "vite",
+    "retro-gaming"
+  ],
+  "author": "Alliance-Sky",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "@thenick775/mgba-wasm": "^2.4.1",
+    "localforage": "^1.10.0",
+    "lucide-react": "^1.25.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.3",
+    "vite": "^8.1.5"
+  }
+}
