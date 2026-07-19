@@ -61,6 +61,18 @@ export default function Emulator() {
   useEffect(() => { emulatorRef.current = emulator; }, [emulator]);
   useEffect(() => { romLoadedRef.current = romLoaded; }, [romLoaded]);
 
+  useEffect(() => {
+    const theme = settings.theme ?? 'indigo';
+    const themeClass = `theme-${theme}`;
+    const classesToRemove = Array.from(document.body.classList).filter(c => c.startsWith('theme-'));
+    classesToRemove.forEach(c => document.body.classList.remove(c));
+    document.body.classList.add(themeClass);
+    
+    return () => {
+      document.body.classList.remove(themeClass);
+    };
+  }, [settings.theme]);
+
   const handleSettingChange = (key, value) => {
     const nextSettings = { ...settings, [key]: value };
     setSettings(nextSettings);
@@ -653,7 +665,7 @@ export default function Emulator() {
         >
           {isReady ? (
             <>
-              <FolderOpen size={48} style={{ margin: '0 auto 1rem', color: 'var(--gba-indigo-light)' }} />
+              <FolderOpen size={48} style={{ margin: '0 auto 1rem', color: 'var(--gba-theme-drop-icon, var(--gba-indigo-light))' }} />
               <p>Load Your GBA ROM</p>
               <span className="btn" style={{ fontSize: '1rem' }}>Drag & Drop or Browse File</span>
               <input 
@@ -956,9 +968,7 @@ export default function Emulator() {
                     </div>
                   )}
                 </div>
-                <div className="bezel-logo">
-                  <span>GAME BOY </span><span className="advance-italic">ADVANCE</span>
-                </div>
+
               </div>
             </div>
 

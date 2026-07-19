@@ -19,7 +19,8 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  background-color: var(--bg-color);
+  background-color: var(--body-bg, var(--bg-color));
+  transition: background-color 0.4s ease;
   color: var(--text-primary);
   display: flex;
   justify-content: center;
@@ -31,7 +32,7 @@ body {
 
 #root {
   width: 100%;
-  height: 100%;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -39,11 +40,13 @@ body {
 .app-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 100vh;
   width: 100vw;
   max-width: 1200px;
   margin: 0 auto;
   position: relative;
+  background-color: var(--body-bg, var(--bg-color));
+  transition: background-color 0.4s ease;
 }
 
 header {
@@ -75,8 +78,8 @@ header {
 .drop-zone {
   width: 100%;
   max-width: 500px;
-  border: 4px dashed var(--gba-indigo-light);
-  background-color: var(--panel-bg);
+  border: 4px dashed var(--gba-theme-drop-border, var(--gba-indigo-light));
+  background-color: var(--gba-theme-drop-bg, var(--panel-bg));
   padding: 4rem 2rem;
   text-align: center;
   border-radius: 20px;
@@ -91,10 +94,10 @@ header {
 }
 
 .drop-zone:hover, .drop-zone.active {
-  background-color: var(--gba-indigo);
-  border-color: var(--gba-glacier);
+  background-color: var(--gba-theme-drop-hover-bg, var(--gba-indigo));
+  border-color: var(--gba-theme-drop-hover-border, var(--gba-glacier));
   transform: translateY(-5px) scale(1.02);
-  box-shadow: inset 0 0 15px rgba(0,0,0,0.3), 0 20px 45px rgba(0,0,0,0.8), 0 0 25px rgba(95, 100, 164, 0.4);
+  box-shadow: inset 0 0 15px rgba(0,0,0,0.3), 0 20px 45px rgba(0,0,0,0.8), 0 0 25px var(--gba-theme-drop-glow, rgba(95, 100, 164, 0.4));
 }
 
 .drop-zone p {
@@ -106,15 +109,15 @@ header {
 }
 
 .btn {
-  background-color: var(--gba-glacier);
-  color: #000;
+  background-color: var(--gba-theme-drop-btn-bg, var(--gba-glacier));
+  color: var(--gba-theme-drop-btn-color, #000);
   border: none;
   padding: 0.8rem 1.5rem;
   font-family: 'Inter', sans-serif;
   font-size: 1.5rem;
   cursor: pointer;
   border-radius: 4px;
-  box-shadow: 0 4px 0 #889bb0;
+  box-shadow: 0 4px 0 var(--gba-theme-drop-btn-shadow, #889bb0);
   transition: transform 0.1s, box-shadow 0.1s;
   display: inline-flex;
   align-items: center;
@@ -123,7 +126,7 @@ header {
 
 .btn:active {
   transform: translateY(4px);
-  box-shadow: 0 0px 0 #889bb0;
+  box-shadow: 0 0px 0 var(--gba-theme-drop-btn-shadow, #889bb0);
 }
 
 .emulator-container {
@@ -132,27 +135,22 @@ header {
   align-items: center;
   width: 100%;
   max-width: 1080px;
-  background: var(--panel-bg);
+  background: transparent;
   padding: 1rem;
   border-radius: 16px;
-  box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 10px 30px rgba(0,0,0,0.8);
   position: relative;
-  transition: all 0.3s ease;
 }
 
 .emulator-container:not(.game-playing) {
-  background: transparent;
-  box-shadow: none;
   padding: 0;
-  border: none;
 }
 
 .screen-bezel {
   background: #23252d; /* Classic dark lens color */
-  padding: 1.5rem 2.2rem 2.2rem 2.2rem;
-  border-radius: 12px 12px 35px 12px;
+  padding: 0.9rem 1.3rem 0.9rem 1.3rem;
+  border-radius: 10px 10px 16px 10px;
   border: 4px solid #1a1b20;
-  margin-bottom: 1rem;
+  margin-bottom: 0.6rem;
   box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 4px 10px rgba(0,0,0,0.5);
   width: 100%;
   display: flex;
@@ -172,7 +170,7 @@ header {
   font-family: 'Outfit', sans-serif;
   font-size: 0.8rem;
   color: var(--gba-theme-bezel-logo, #8b939f);
-  margin-top: 0.8rem;
+  margin-top: 0.45rem;
   letter-spacing: 0.15rem;
   text-shadow: 1px 1px 0px var(--gba-theme-bezel-logo-shadow, #000);
   user-select: none;
@@ -1340,3 +1338,175 @@ canvas {
 .emulator-layout.fullscreen-mode .keyboard-legend {
   display: none !important;
 }
+
+/* THEMED PAGE BACKGROUNDS + DROP ZONE COLORS */
+body.theme-indigo {
+  --body-bg: #272948;
+  --gba-theme-drop-bg: #2d2d44;
+  --gba-theme-drop-border: #5f64a4;
+  --gba-theme-drop-hover-bg: #4A4E83;
+  --gba-theme-drop-hover-border: #b0c4de;
+  --gba-theme-drop-glow: rgba(95, 100, 164, 0.4);
+  --gba-theme-drop-icon: #5f64a4;
+  --gba-theme-drop-btn-bg: #b0c4de;
+  --gba-theme-drop-btn-color: #1a1a2e;
+  --gba-theme-drop-btn-shadow: #889bb0;
+}
+body.theme-glacier {
+  --body-bg: #1b2a33;
+  --gba-theme-drop-bg: #1e3040;
+  --gba-theme-drop-border: #5fa4b9;
+  --gba-theme-drop-hover-bg: #2a4d5e;
+  --gba-theme-drop-hover-border: #b7e2eb;
+  --gba-theme-drop-glow: rgba(95, 164, 185, 0.4);
+  --gba-theme-drop-icon: #5fa4b9;
+  --gba-theme-drop-btn-bg: #5fa4b9;
+  --gba-theme-drop-btn-color: #0e1c22;
+  --gba-theme-drop-btn-shadow: #1b2833;
+}
+body.theme-spice-orange {
+  --body-bg: #521c0b;
+  --gba-theme-drop-bg: #3d1508;
+  --gba-theme-drop-border: #d85024;
+  --gba-theme-drop-hover-bg: #6b2010;
+  --gba-theme-drop-hover-border: #f06a38;
+  --gba-theme-drop-glow: rgba(216, 80, 36, 0.45);
+  --gba-theme-drop-icon: #f06a38;
+  --gba-theme-drop-btn-bg: #d85024;
+  --gba-theme-drop-btn-color: #fff;
+  --gba-theme-drop-btn-shadow: #6b200b;
+}
+body.theme-charcoal {
+  --body-bg: #1a1b1c;
+  --gba-theme-drop-bg: #222324;
+  --gba-theme-drop-border: #5c5f63;
+  --gba-theme-drop-hover-bg: #2b2c2e;
+  --gba-theme-drop-hover-border: #888;
+  --gba-theme-drop-glow: rgba(92, 95, 99, 0.4);
+  --gba-theme-drop-icon: #5c5f63;
+  --gba-theme-drop-btn-bg: #5c5f63;
+  --gba-theme-drop-btn-color: #fff;
+  --gba-theme-drop-btn-shadow: #121213;
+}
+body.theme-platinum {
+  --body-bg: #2a2e33;
+  --gba-theme-drop-bg: #2e3338;
+  --gba-theme-drop-border: #818a93;
+  --gba-theme-drop-hover-bg: #3f454d;
+  --gba-theme-drop-hover-border: #e1e8ef;
+  --gba-theme-drop-glow: rgba(177, 188, 197, 0.4);
+  --gba-theme-drop-icon: #b2bcc5;
+  --gba-theme-drop-btn-bg: #b2bcc5;
+  --gba-theme-drop-btn-color: #1a1d20;
+  --gba-theme-drop-btn-shadow: #2a2e33;
+}
+body.theme-fuchsia {
+  --body-bg: #45112a;
+  --gba-theme-drop-bg: #38102a;
+  --gba-theme-drop-border: #d84493;
+  --gba-theme-drop-hover-bg: #5a1a3f;
+  --gba-theme-drop-hover-border: #ffb6db;
+  --gba-theme-drop-glow: rgba(216, 68, 147, 0.45);
+  --gba-theme-drop-icon: #d84493;
+  --gba-theme-drop-btn-bg: #d84493;
+  --gba-theme-drop-btn-color: #fff;
+  --gba-theme-drop-btn-shadow: #3f1028;
+}
+body.theme-midnight-blue {
+  --body-bg: #0c1024;
+  --gba-theme-drop-bg: #0e1530;
+  --gba-theme-drop-border: #3c54a8;
+  --gba-theme-drop-hover-bg: #1a2550;
+  --gba-theme-drop-hover-border: #7090be;
+  --gba-theme-drop-glow: rgba(60, 84, 168, 0.45);
+  --gba-theme-drop-icon: #506ebe;
+  --gba-theme-drop-btn-bg: #3c54a8;
+  --gba-theme-drop-btn-color: #fff;
+  --gba-theme-drop-btn-shadow: #080b20;
+}
+body.theme-pink {
+  --body-bg: #542d3c;
+  --gba-theme-drop-bg: #472030;
+  --gba-theme-drop-border: #ff66a3;
+  --gba-theme-drop-hover-bg: #7a3050;
+  --gba-theme-drop-hover-border: #ffb3d1;
+  --gba-theme-drop-glow: rgba(255, 102, 163, 0.45);
+  --gba-theme-drop-icon: #ff66a3;
+  --gba-theme-drop-btn-bg: #ff66a3;
+  --gba-theme-drop-btn-color: #fff;
+  --gba-theme-drop-btn-shadow: #8c3354;
+}
+body.theme-gold {
+  --body-bg: #33270d;
+  --gba-theme-drop-bg: #2a1f08;
+  --gba-theme-drop-border: #cca044;
+  --gba-theme-drop-hover-bg: #4a3518;
+  --gba-theme-drop-hover-border: #ffe6a3;
+  --gba-theme-drop-glow: rgba(223, 180, 91, 0.45);
+  --gba-theme-drop-icon: #dfb45b;
+  --gba-theme-drop-btn-bg: #cca044;
+  --gba-theme-drop-btn-color: #1a1200;
+  --gba-theme-drop-btn-shadow: #3b2c0b;
+}
+body.theme-famicom {
+  --body-bg: #3d0c10;
+  --gba-theme-drop-bg: #300810;
+  --gba-theme-drop-border: #c5a363;
+  --gba-theme-drop-hover-bg: #5c1018;
+  --gba-theme-drop-hover-border: #ffe4c4;
+  --gba-theme-drop-glow: rgba(197, 163, 99, 0.45);
+  --gba-theme-drop-icon: #c5a363;
+  --gba-theme-drop-btn-bg: #c5a363;
+  --gba-theme-drop-btn-color: #1a0803;
+  --gba-theme-drop-btn-shadow: #420a0f;
+}
+body.theme-nes {
+  --body-bg: #3a3a3a;
+  --gba-theme-drop-bg: #2e2e2e;
+  --gba-theme-drop-border: #d31616;
+  --gba-theme-drop-hover-bg: #484848;
+  --gba-theme-drop-hover-border: #cccccc;
+  --gba-theme-drop-glow: rgba(211, 22, 22, 0.4);
+  --gba-theme-drop-icon: #d31616;
+  --gba-theme-drop-btn-bg: #d31616;
+  --gba-theme-drop-btn-color: #fff;
+  --gba-theme-drop-btn-shadow: #490404;
+}
+body.theme-pikachu {
+  --body-bg: #3d3205;
+  --gba-theme-drop-bg: #302804;
+  --gba-theme-drop-border: #e62a15;
+  --gba-theme-drop-hover-bg: #544406;
+  --gba-theme-drop-hover-border: #fcd116;
+  --gba-theme-drop-glow: rgba(252, 209, 22, 0.5);
+  --gba-theme-drop-icon: #fcd116;
+  --gba-theme-drop-btn-bg: #fcd116;
+  --gba-theme-drop-btn-color: #1a1000;
+  --gba-theme-drop-btn-shadow: #6b5006;
+}
+body.theme-charizard {
+  --body-bg: #471f07;
+  --gba-theme-drop-bg: #381808;
+  --gba-theme-drop-border: #f37021;
+  --gba-theme-drop-hover-bg: #5e2a0a;
+  --gba-theme-drop-hover-border: #ffe066;
+  --gba-theme-drop-glow: rgba(243, 112, 33, 0.45);
+  --gba-theme-drop-icon: #ffe066;
+  --gba-theme-drop-btn-bg: #f37021;
+  --gba-theme-drop-btn-color: #fff;
+  --gba-theme-drop-btn-shadow: #8c3600;
+}
+body.theme-celebi {
+  --body-bg: #282e18;
+  --gba-theme-drop-bg: #202614;
+  --gba-theme-drop-border: #7d8c54;
+  --gba-theme-drop-hover-bg: #3a4522;
+  --gba-theme-drop-hover-border: #c2d29e;
+  --gba-theme-drop-glow: rgba(125, 140, 84, 0.45);
+  --gba-theme-drop-icon: #c2d29e;
+  --gba-theme-drop-btn-bg: #7d8c54;
+  --gba-theme-drop-btn-color: #fff;
+  --gba-theme-drop-btn-shadow: #3b4226;
+}
+
+
