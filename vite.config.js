@@ -17,9 +17,10 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       compression({
-        algorithm: 'gzip',
+        algorithms: ['gzip'],
         include: /\.(js|mjs|json|css|html|wasm)$/i,
         threshold: 1024,
+        deleteOriginalAssets: true,
       })
     ],
     define: {

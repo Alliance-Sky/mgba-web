@@ -67,6 +67,12 @@ npm run build
 
 This will compile the application and output the static assets into the `dist/` directory.
 
+> [!IMPORTANT]
+> To optimize server space and bundle delivery, the build process is configured to **only keep the compressed `.gz` files** for assets (JavaScript, CSS, WebAssembly) and delete the original uncompressed files.
+>
+> Ensure your web server/hosting provider is configured to support pre-compressed assets. For instance, in Nginx, you must enable `gzip_static on;` (as shown in the configuration example below).
+
+
 ## Hosting and Deployment
 
 Since the application compiles into static HTML, CSS, and JS files, it can be hosted on any static hosting provider or virtual machine (VM).
