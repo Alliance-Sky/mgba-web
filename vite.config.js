@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { compression } from 'vite-plugin-compression2';
 import fs from 'fs';
 import path from 'path';
 
@@ -13,7 +14,14 @@ export default defineConfig(({ mode }) => {
   const appVersion = mode === 'development' ? `${pkg.version}-dev` : `${pkg.version}-${Date.now()}`;
 
   return {
-    plugins: [react()],
+    plugins: [
+      react(),
+      compression({
+        algorithm: 'gzip',
+        include: /\.(js|mjs|json|css|html|wasm)$/i,
+        threshold: 1024,
+      })
+    ],
     define: {
       __APP_VERSION__: JSON.stringify(appVersion),
     },

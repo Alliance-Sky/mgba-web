@@ -114,33 +114,53 @@ Add the headers in your Nginx server configuration block:
 ```nginx
 server {
     listen 80;
+    listen [::]:80;
     server_name your_domain_or_ip;
-    return 301 https://$host$request_uri;
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
 }
 
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    listen [::]:443 ssl;
     server_name your_domain_or_ip;
 
     ssl_certificate /etc/letsencrypt/live/your_domain_or_ip/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/your_domain_or_ip/privkey.pem;
 
     ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_prefer_server_ciphers on;
-    ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384';
+    ssl_ciphers HIGH:!aNULL:!MD5;
 
-    root /var/www/web-gba/dist;
+    root /path/to/web-gba/dist;
     index index.html;
+
+    # Serve pre-compressed static assets (.gz)
+    gzip_static on;
+
+    # Disable caching for HTML files (index.html SPA entry point)
+    location ~* \.(?:html|htm)$ {
+        add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0" always;
+        add_header Cross-Origin-Opener-Policy "same-origin" always;
+        add_header Cross-Origin-Embedder-Policy "require-corp" always;
+    }
+
+    # Cache compiled assets forever because they contain unique hashes
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        add_header Cross-Origin-Opener-Policy "same-origin" always;
+        add_header Cross-Origin-Embedder-Policy "require-corp" always;
+    }
 
     location / {
         try_files $uri $uri/ /index.html;
     }
 
+    # Crucial headers for WebAssembly (SharedArrayBuffer)
     add_header Cross-Origin-Opener-Policy "same-origin" always;
     add_header Cross-Origin-Embedder-Policy "require-corp" always;
-
-    gzip on;
-    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
 }
 ```
 
