@@ -1035,6 +1035,16 @@ canvas {
   box-shadow: 0 0px 0 var(--btn-shadow);
 }
 
+.save-action-btn.danger-btn {
+  background: #c22929;
+  border-color: #ef4444;
+}
+
+.save-action-btn.danger-btn:hover {
+  background: #ef4444;
+}
+
+
 /* THEME SPECIFIC VARIABLE DEFINITIONS */
 .emulator-layout.theme-indigo {
   --gba-theme-bg: var(--gba-indigo);

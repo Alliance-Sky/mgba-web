@@ -552,6 +552,73 @@ export default function Emulator() {
     });
   };
 
+  const handleFactoryReset = async () => {
+    const confirmReset = window.confirm(
+      "FACTORY RESET APP\n\n" +
+      "This will permanently delete:\n" +
+      "• All in-game save files (.SAV)\n" +
+      "• All save states (.SS1, etc.)\n" +
+      "• Your customized settings (themes, scales, volume, etc.)\n\n" +
+      "Are you absolutely sure you want to proceed? This cannot be undone."
+    );
+
+    if (!confirmReset) return;
+
+    try {
+      if (emulatorRef.current) {
+        try {
+          emulatorRef.current.quitGame();
+        } catch (e) {
+          console.warn("Emulation quit during reset:", e);
+        }
+      }
+
+      localStorage.clear();
+
+      if (window.indexedDB) {
+        if (typeof window.indexedDB.databases === 'function') {
+          try {
+            const dbs = await window.indexedDB.databases();
+            for (const db of dbs) {
+              window.indexedDB.deleteDatabase(db.name);
+            }
+          } catch (e) {
+            console.error("Failed to delete IndexedDB databases via databases() API:", e);
+          }
+        }
+        window.indexedDB.deleteDatabase('/mgba');
+      }
+
+      if (window.caches) {
+        try {
+          const keys = await window.caches.keys();
+          for (const key of keys) {
+            await window.caches.delete(key);
+          }
+        } catch (e) {
+          console.error("Failed to clear Cache Storage:", e);
+        }
+      }
+
+      if (navigator.serviceWorker) {
+        try {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          for (const registration of registrations) {
+            await registration.unregister();
+          }
+        } catch (e) {
+          console.error("Failed to unregister Service Worker:", e);
+        }
+      }
+
+      alert("Application has been completely reset. Reloading now...");
+      window.location.href = window.location.origin + window.location.pathname;
+    } catch (err) {
+      console.error("Error during factory reset:", err);
+      alert("An error occurred during reset. Some data might not have been deleted.");
+    }
+  };
+
   // Touch controls handling with unified multi-touch slider support
   const pressTimestampsRef = useRef({});
   const activeButtonsRef = useRef(new Set());
@@ -989,6 +1056,9 @@ export default function Emulator() {
                               style={{ display: 'none' }} 
                               onChange={handleImportSave} 
                             />
+                            <button className="save-action-btn danger-btn" onClick={handleFactoryReset} style={{ marginTop: '0.4rem' }}>
+                              FACTORY RESET APP
+                            </button>
                           </div>
                         </div>
                       </div>
