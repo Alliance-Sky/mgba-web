@@ -497,9 +497,9 @@ export default function Emulator() {
     const romPath = emulator.gameName;
 
     try {
-      emulator.quitMgba();
+      emulator.quitGame();
     } catch (e) {
-      console.warn("quitMgba before import:", e);
+      console.warn("quitGame before import:", e);
     }
 
     emulator.uploadSaveOrSaveState(renamedFile, () => {
