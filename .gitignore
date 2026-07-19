@@ -63,7 +63,6 @@ web_modules/
 .node_repl_history
 
 # Output directory for Vite build
-dist/
 dist-ssr/
 *.local
 
