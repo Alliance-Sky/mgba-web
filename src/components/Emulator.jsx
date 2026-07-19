@@ -8,6 +8,7 @@ export default function Emulator() {
   const [isReady, setIsReady] = useState(false);
   const [romLoaded, setRomLoaded] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [settingsInteractable, setSettingsInteractable] = useState(false);
   const [videoMode, setVideoMode] = useState(() => {
     return localStorage.getItem('gba-video-mode') || 'none';
   });
@@ -58,6 +59,16 @@ export default function Emulator() {
   const romLoadedRef = useRef(false);
 
   useEffect(() => { showSettingsRef.current = showSettings; }, [showSettings]);
+  
+  useEffect(() => {
+    if (showSettings) {
+      const timer = setTimeout(() => setSettingsInteractable(true), 350);
+      return () => clearTimeout(timer);
+    } else {
+      setSettingsInteractable(false);
+    }
+  }, [showSettings]);
+
   useEffect(() => { emulatorRef.current = emulator; }, [emulator]);
   useEffect(() => { romLoadedRef.current = romLoaded; }, [romLoaded]);
 
@@ -88,7 +99,14 @@ export default function Emulator() {
           }
         } else if (key === 'fastForward') {
           const speed = Number(value);
+          emulator.setCoreSettings({
+            frameSkip: speed === 3 ? Math.max(Number(nextSettings.frameSkip), 1) : (speed >= 4 ? Math.max(Number(nextSettings.frameSkip), 2) : Number(nextSettings.frameSkip)),
+            rewindEnable: false,
+            videoSync: true,
+            audioSampleRate: 48000
+          });
           emulator.setFastForwardMultiplier(speed);
+
           if (nextSettings.autoMuteOnFastForward) {
             if (speed > 1) {
               emulator.setVolume(0);
@@ -105,11 +123,17 @@ export default function Emulator() {
           }
         } else if (key === 'frameSkip') {
           emulator.setCoreSettings({
-            frameSkip: Number(nextSettings.frameSkip),
+            frameSkip: speed === 3 ? Math.max(Number(nextSettings.frameSkip), 1) : (speed >= 4 ? Math.max(Number(nextSettings.frameSkip), 2) : Number(nextSettings.frameSkip)),
             rewindEnable: false,
             videoSync: true,
             audioSampleRate: 48000
           });
+          emulator.setFastForwardMultiplier(speed);
+          if (nextSettings.autoMuteOnFastForward && speed > 1) {
+            emulator.setVolume(0);
+          } else {
+            emulator.setVolume(Number(nextSettings.volume));
+          }
         }
       } catch (e) {
         console.error("Error setting core settings:", e);
@@ -237,18 +261,19 @@ export default function Emulator() {
           
           // Apply initial settings
           try {
+            const speed = Number(settings.fastForward);
             Module.setCoreSettings({
-              frameSkip: Number(settings.frameSkip),
+              frameSkip: speed === 3 ? Math.max(Number(settings.frameSkip), 1) : (speed >= 4 ? Math.max(Number(settings.frameSkip), 2) : Number(settings.frameSkip)),
               rewindEnable: false,
               videoSync: true,
               audioSampleRate: 48000
             });
-            if (settings.autoMuteOnFastForward && Number(settings.fastForward) > 1) {
+            Module.setFastForwardMultiplier(speed);
+            if (settings.autoMuteOnFastForward && speed > 1) {
               Module.setVolume(0);
             } else {
               Module.setVolume(Number(settings.volume));
             }
-            Module.setFastForwardMultiplier(Number(settings.fastForward));
           } catch (e) {
             console.error("Error setting initial core settings:", e);
           }
@@ -374,18 +399,19 @@ export default function Emulator() {
   const applyActiveSettings = (emu) => {
     if (!emu) return;
     try {
-      if (settings.autoMuteOnFastForward && Number(settings.fastForward) > 1) {
-        emu.setVolume(0);
-      } else {
-        emu.setVolume(Number(settings.volume));
-      }
-      emu.setFastForwardMultiplier(Number(settings.fastForward));
+      const speed = Number(settings.fastForward);
       emu.setCoreSettings({
-        frameSkip: Number(settings.frameSkip),
+        frameSkip: speed === 3 ? Math.max(Number(settings.frameSkip), 1) : (speed >= 4 ? Math.max(Number(settings.frameSkip), 2) : Number(settings.frameSkip)),
         rewindEnable: false,
         videoSync: true,
         audioSampleRate: 48000
       });
+      emu.setFastForwardMultiplier(speed);
+      if (settings.autoMuteOnFastForward && speed > 1) {
+        emu.setVolume(0);
+      } else {
+        emu.setVolume(Number(settings.volume));
+      }
     } catch (e) {
       console.error("Failed to apply active settings:", e);
     }
@@ -735,7 +761,8 @@ export default function Emulator() {
 
                   {showSettings && (
                     <div 
-                      className="screen-settings-overlay" 
+                      className={`screen-settings-overlay ${settingsInteractable ? 'interactable' : 'locked'}`}
+                      style={{ pointerEvents: settingsInteractable ? 'auto' : 'none' }}
                       onTouchStart={(e) => e.stopPropagation()} 
                       onTouchMove={(e) => e.stopPropagation()}
                       onContextMenu={(e) => e.stopPropagation()}
