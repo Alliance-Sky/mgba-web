@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mgba-web",
+  "compatibility_date": "2024-03-20",
+  "main": "src/worker.js",
+  "assets": {
+    "directory": "dist",
+    "binding": "ASSETS"
+  },
+  "routes": [
+    {
+      "pattern": "mgba.musaddik.eu.cc",
+      "custom_domain": true
+    }
+  ]
+}
