@@ -4,9 +4,9 @@
   "description": "A web-based Game Boy (GB), Game Boy Color (GBC), and Game Boy Advance (GBA) emulator",
   "main": "index.js",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "node node_modules/vite/bin/vite.js",
+    "build": "node node_modules/vite/bin/vite.js build",
+    "preview": "node node_modules/vite/bin/vite.js preview"
   },
   "keywords": [
     "mgba-web",

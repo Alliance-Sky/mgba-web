@@ -24,8 +24,9 @@ body {
   color: var(--text-primary);
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
   user-select: none;
 }
@@ -33,6 +34,7 @@ body {
 #root {
   width: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -41,6 +43,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-height: 100dvh;
   width: 100vw;
   max-width: 1200px;
   margin: 0 auto;
@@ -134,7 +137,7 @@ header {
   flex-direction: column;
   align-items: center;
   width: 100%;
-  max-width: 1080px;
+  max-width: 100%; /* Fully fluid width up to window boundaries */
   background: transparent;
   padding: 1rem;
   border-radius: 16px;
@@ -217,7 +220,7 @@ header {
 .canvas-wrapper {
   position: relative;
   width: 100%;
-  max-width: 112.5vh; /* Fluid max width bound to 75vh vertical height to prevent 4K scrolling */
+  max-width: min(var(--user-max-width, 100%), 112.5vh); /* Bound by user setting and viewport height */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -331,7 +334,7 @@ canvas {
   align-items: center;
   position: relative;
   min-height: 200px;
-  justify-content: center;
+  justify-content: space-between;
 }
 
 .wing-left {
@@ -343,7 +346,7 @@ canvas {
 }
 
 /* Shoulder Bumpers inline with Select/Start */
-.menu-buttons-container .bumper-btn {
+.bumper-btn {
   position: static;
   background: var(--gba-theme-bumper-bg, #3a3d46);
   border: 2px solid #1f2126;
@@ -364,8 +367,8 @@ canvas {
 }
 
 /* Bumper buttons active styling */
-.menu-buttons-container .bumper-btn:active,
-.menu-buttons-container .bumper-btn.pressed {
+.bumper-btn:active,
+.bumper-btn.pressed {
   transform: scale(var(--lr-scale, 1.2)) translateY(2px);
   box-shadow: 0 0px 0 var(--gba-theme-btn-shadow, var(--btn-shadow));
 }
@@ -429,7 +432,7 @@ canvas {
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: clamp(0.5rem, 4vw, 3rem); /* Fluid spacing down to mobile sizes */
+  gap: clamp(0.5rem, 4vw, 3rem);
   width: 100%;
   margin-top: 1rem;
 }
@@ -667,7 +670,7 @@ canvas {
   box-shadow: inset 1px 1px 1px #000;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px) and (orientation: portrait) {
   .main-content:has(.game-playing) {
     justify-content: flex-start;
     padding: 0;
@@ -725,6 +728,60 @@ canvas {
   .speaker-grille {
     right: 1rem;
     bottom: 0.2rem;
+  }
+}
+
+.mobile-landscape-only {
+  display: none !important;
+}
+
+/* Landscape Mobile or small height screens (fixes squished UI on phones in landscape) */
+@media (max-height: 500px) and (orientation: landscape), (max-width: 932px) and (orientation: landscape) {
+  .emulator-container {
+    padding: 0;
+    max-width: 100vw;
+    transform: scale(0.92);
+    transform-origin: top center;
+  }
+  .screen-bezel {
+    border-radius: 0;
+    padding: 0;
+    border: none;
+    margin-bottom: 0;
+  }
+  .emulator-layout.with-touch {
+    padding: 0;
+    margin-top: 0;
+    border-radius: 0;
+    border: none;
+    gap: 0.5rem;
+    box-shadow: none;
+    background: transparent;
+  }
+  .console-wing {
+    min-height: auto;
+  }
+  .canvas-wrapper {
+    max-width: min(var(--user-max-width, 100%), 130vh);
+  }
+  .main-content {
+    padding: 0;
+    justify-content: flex-start !important;
+  }
+  .hide-on-mobile-landscape {
+    display: none !important;
+  }
+  .mobile-landscape-only {
+    display: flex !important;
+  }
+  button.mobile-landscape-only {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+  }
+  button.mobile-landscape-only.bumper-btn {
+    margin-top: -2rem;
+    margin-bottom: 2rem;
   }
 }
 

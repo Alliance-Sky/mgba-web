@@ -745,7 +745,6 @@ export default function Emulator() {
   return (
     <div 
       className={`emulator-container ${romLoaded ? 'game-playing' : ''}`}
-      style={romLoaded ? { maxWidth: showTouchControls ? `${240 * (settings.screenScale || 3) + 640}px` : `${240 * (settings.screenScale || 3) + 160}px` } : undefined}
     >
       
       {!romLoaded && (
@@ -783,8 +782,7 @@ export default function Emulator() {
           '--dpad-scale': String(settings.dpadScale ?? 1.2),
           '--btn-scale': String(settings.btnScale ?? 1.2),
           '--lr-scale': String(settings.lrScale ?? 1.2),
-          '--sys-btn-scale': String(settings.sysBtnScale ?? 1.0),
-          maxWidth: romLoaded ? (showTouchControls ? `${240 * (settings.screenScale || 3) + 600}px` : `${240 * (settings.screenScale || 3) + 120}px`) : undefined
+          '--sys-btn-scale': String(settings.sysBtnScale ?? 1.0)
         }}
         onTouchStart={handleConsoleTouch}
         onTouchMove={handleConsoleTouch}
@@ -794,7 +792,8 @@ export default function Emulator() {
           {/* Left Wing (D-pad) */}
           {showTouchControls && (
             <div className="console-wing wing-left">
-              <div className="left-controls">
+              <button className="bumper-btn bumper-l mobile-landscape-only" data-gba-btn="L" style={{ display: 'none' }}>L</button>
+              <div className="left-controls" style={{ margin: '1rem 0', minHeight: '110px' }}>
                 <div className="dpad">
                   <button className="dpad-btn dpad-up" data-gba-btn="Up"></button>
                   <button className="dpad-btn dpad-down" data-gba-btn="Down"></button>
@@ -802,6 +801,10 @@ export default function Emulator() {
                   <button className="dpad-btn dpad-right" data-gba-btn="Right"></button>
                   <div className="dpad-btn dpad-center"></div>
                 </div>
+              </div>
+              <div className="sys-btn-wrapper mobile-landscape-only" style={{ display: 'none', marginTop: '3.5rem' }}>
+                <button className="sys-btn select-btn" data-gba-btn="Select"></button>
+                <span className="sys-btn-label">SELECT</span>
               </div>
             </div>
           )}
@@ -811,7 +814,7 @@ export default function Emulator() {
             {/* Screen lens */}
             <div className="screen-bezel" style={{ display: 'flex' }}>
               <div className="bezel-inner">
-                <div className="canvas-wrapper" style={{ maxWidth: `${240 * (settings.screenScale || 3)}px` }}>
+                <div className="canvas-wrapper" style={{ '--user-max-width': `${240 * (settings.screenScale || 3)}px` }}>
                   <canvas 
                     ref={canvasRef} 
                     width={240} 
@@ -1071,7 +1074,7 @@ export default function Emulator() {
 
             {/* System buttons + L/R bumpers on the same line (centered below screen lens) */}
             {showTouchControls && (
-              <div className="menu-buttons-container">
+              <div className="menu-buttons-container hide-on-mobile-landscape">
                 <button className="bumper-btn bumper-l" data-gba-btn="L">L</button>
                 
                 <div className="sys-btn-wrapper">
@@ -1097,7 +1100,8 @@ export default function Emulator() {
           {/* Right Wing (A/B buttons + speaker) */}
           {showTouchControls && (
             <div className="console-wing wing-right">
-              <div className="right-controls">
+              <button className="bumper-btn bumper-r mobile-landscape-only" data-gba-btn="R" style={{ display: 'none' }}>R</button>
+              <div className="right-controls" style={{ margin: '1rem 0', minHeight: '110px' }}>
                 <div className="action-buttons">
                   <div className="action-btn-wrapper b-btn-wrapper">
                     <button className="action-btn btn-b" data-gba-btn="B">B</button>
@@ -1107,7 +1111,17 @@ export default function Emulator() {
                   </div>
                 </div>
               </div>
-              <div className="speaker-grille">
+              <div className="mobile-landscape-only" style={{ display: 'none', gap: '1.5rem', alignItems: 'center', marginTop: '3.5rem' }}>
+                <div className="sys-btn-wrapper">
+                  <button className="sys-btn menu-btn" data-gba-btn="Menu" onClick={handleOpenSettings}></button>
+                  <span className="sys-btn-label">MENU</span>
+                </div>
+                <div className="sys-btn-wrapper">
+                  <button className="sys-btn start-btn" data-gba-btn="Start"></button>
+                  <span className="sys-btn-label">START</span>
+                </div>
+              </div>
+              <div className="speaker-grille hide-on-mobile-landscape">
                 <div className="grille-hole"></div>
                 <div className="grille-hole"></div>
                 <div className="grille-hole"></div>
