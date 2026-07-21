@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
         algorithms: ['gzip'],
         include: /\.(js|mjs|json|css|html|wasm)$/i,
         threshold: 1024,
-        deleteOriginalAssets: true,
+        deleteOriginalAssets: false,
       })
     ],
     define: {
