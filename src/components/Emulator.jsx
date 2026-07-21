@@ -196,7 +196,7 @@ export default function Emulator() {
         ctx.texImage2D = function(...args) {
           const width = args[3];
           const height = args[4];
-          if (width === 240 && height === 160) {
+          if ((width === 240 && height === 160) || (width === 160 && height === 144)) {
             frameCountRef.current++;
           } else if (args.length < 5) {
             frameCountRef.current++;
@@ -208,7 +208,7 @@ export default function Emulator() {
         ctx.texSubImage2D = function(...args) {
           const width = args[4];
           const height = args[5];
-          if (width === 240 && height === 160) {
+          if ((width === 240 && height === 160) || (width === 160 && height === 144)) {
             frameCountRef.current++;
           } else if (args.length < 6) {
             frameCountRef.current++;
@@ -436,7 +436,7 @@ export default function Emulator() {
       }
       
       const romName = emulator.gameName ? emulator.gameName.split('/').pop() : 'game';
-      const saveName = romName.replace(/\.gba$/i, '') + '.sav';
+      const saveName = romName.replace(/\.(gba|gb|gbc)$/i, '') + '.sav';
 
       const blob = new Blob([saveBytes], { type: 'application/octet-stream' });
       const url = URL.createObjectURL(blob);
@@ -469,7 +469,7 @@ export default function Emulator() {
       }
       
       const romName = emulator.gameName ? emulator.gameName.split('/').pop() : 'game';
-      const stateName = romName.replace(/\.gba$/i, '') + '.ss1';
+      const stateName = romName.replace(/\.(gba|gb|gbc)$/i, '') + '.ss1';
 
       const blob = new Blob([stateObj.data], { type: 'application/octet-stream' });
       const url = URL.createObjectURL(blob);
@@ -530,7 +530,7 @@ export default function Emulator() {
       return;
     }
 
-    const targetSaveName = romName.replace(/\.gba$/i, '') + '.sav';
+    const targetSaveName = romName.replace(/\.(gba|gb|gbc)$/i, '') + '.sav';
     const renamedFile = new File([file], targetSaveName, { type: file.type });
     const romPath = emulator.gameName;
 
@@ -759,13 +759,13 @@ export default function Emulator() {
           {isReady ? (
             <>
               <FolderOpen size={48} style={{ margin: '0 auto 1rem', color: 'var(--gba-theme-drop-icon, var(--gba-indigo-light))' }} />
-              <p>Load Your GBA ROM</p>
-              <span className="btn" style={{ fontSize: '1rem' }}>Drag & Drop or Browse File</span>
+              <p>Load Your Game Boy ROM</p>
+              <span className="btn" style={{ fontSize: '1rem' }}>Drag & Drop or Browse File (.gba, .gb, .gbc, .zip)</span>
               <input 
                 type="file" 
                 id="rom-upload" 
                 className="file-input" 
-                accept=".gba,.zip"
+                accept=".gba,.gb,.gbc,.zip"
                 onChange={handleFileSelect}
               />
             </>

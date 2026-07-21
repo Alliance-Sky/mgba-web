@@ -1,17 +1,15 @@
-# Web GBA Emulator
+# mGBA-Web
 
-A web-based Game Boy Advance (GBA) emulator built with React, Vite, and mGBA (via WebAssembly). This emulator allows you to load and play GBA ROMs directly in your web browser.
+A web-based Game Boy (GB), Game Boy Color (GBC), and Game Boy Advance (GBA) emulator built with React, Vite, and mGBA (via WebAssembly). This emulator allows you to load and play `.gb`, `.gbc`, `.gba`, and `.zip` ROMs directly in your web browser.
 
 ## Features
 
-- High performance Game Boy Advance emulation powered by mGBA WebAssembly.
-- Fast forward speed controls (1x, 2x, 3x, 4x, and 5x).
-- Auto-mute sound option during fast forward.
-- Frame skipping configurations (0, 1, or 2 frames).
-- Advanced video filters including AMD Super Resolution 2.0, HQ Crisp/Smooth/Vibrant/Soft, Bilinear, and LCD Subpixel Grid.
-- Game screen size multiplier settings (1x up to 10x scale) with automatic viewport limits for mobile devices.
-- Fully responsive interface optimized for both desktop and mobile screens.
-- Local storage integrations for save files and settings preservation.
+- **Multi-System Emulation:** Powered by the mGBA core for accurate Game Boy (GB), Game Boy Color (GBC), and Game Boy Advance (GBA) emulation.
+- **Wide Format Support:** Load `.gb`, `.gbc`, `.gba`, and `.zip` ROMs seamlessly.
+- **Speed & Timing Controls:** Fast forward speed controls (1x to 5x), frame skipping (0, 1, 2 frames), and auto-mute.
+- **Advanced Video Shaders:** Built-in AMD FSR 2.0, HQ Crisp/Smooth/Vibrant/Soft, Bilinear, and CRT subpixel grid filters.
+- **Save Management:** Support for exporting and importing in-game saves (`.sav`) and save states (`.ss1`) with automatic IndexedDB synchronization.
+- **Touch & Keyboard Controls:** On-screen touch overlay for mobile and full keybinding customization for desktop.
 
 ## Prerequisites
 
@@ -25,7 +23,7 @@ Follow these steps to run the application locally:
 
 1. Clone or copy the repository files:
    ```bash
-   cd web-gba
+   cd mgba-web
    ```
 
 2. Install the project dependencies:
@@ -139,7 +137,7 @@ server {
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers HIGH:!aNULL:!MD5;
 
-    root /path/to/web-gba/dist;
+    root /path/to/mgba-web/dist;
     index index.html;
 
     # Serve pre-compressed static assets (.gz)
@@ -193,7 +191,7 @@ If you are hosting on a Linux VM, you can obtain a free SSL certificate using Ce
 
 ## Credits
 
-- mGBA: The underlying Game Boy Advance emulator core.
+- mGBA: The underlying Game Boy, Game Boy Color, and Game Boy Advance emulator core.
 - @thenick775/mgba-wasm: WebAssembly build of mGBA used to run the emulator core in the browser.
 - React and Vite: The frontend library and build tool powering the application.
 

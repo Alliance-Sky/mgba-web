@@ -1,7 +1,7 @@
 {
-  "name": "web-gba",
-  "version": "0.1.0",
-  "description": "A web-based Game Boy Advance emulator",
+  "name": "mgba-web",
+  "version": "1.0.0",
+  "description": "A web-based Game Boy (GB), Game Boy Color (GBC), and Game Boy Advance (GBA) emulator",
   "main": "index.js",
   "scripts": {
     "dev": "vite",
@@ -9,8 +9,13 @@
     "preview": "vite preview"
   },
   "keywords": [
+    "mgba-web",
+    "gb",
+    "gbc",
     "gba",
     "emulator",
+    "gameboy",
+    "gameboy-color",
     "gameboy-advance",
     "mgba",
     "wasm",
