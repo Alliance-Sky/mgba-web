@@ -27,43 +27,33 @@ export default function Emulator() {
 
   const getLayoutId = (base) => `${base}-${isLandscape ? 'landscape' : 'portrait'}`;
 
-  
+  const defaultSettings = {
+    frameSkip: 0,
+    showFpsCounter: false,
+    volume: 1.0,
+    fastForward: 1.0,
+    autoMuteOnFastForward: true,
+    dpadScale: 1.2,
+    btnScale: 1.2,
+    lrScale: 1.2,
+    sysBtnScale: 1.0,
+    theme: 'indigo',
+    fullscreenMode: false,
+    screenScale: 3,
+  };
+
   const [settings, setSettings] = useState(() => {
     const saved = localStorage.getItem('gba-settings');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         return {
-          frameSkip: 0,
-          showFpsCounter: false,
-          volume: 1.0,
-          fastForward: 1.0,
-          autoMuteOnFastForward: true,
-          dpadScale: 1.2,
-          btnScale: 1.2,
-          lrScale: 1.2,
-          sysBtnScale: 1.0,
-          theme: 'indigo',
-          fullscreenMode: false,
-          screenScale: 3,
+          ...defaultSettings,
           ...parsed
         };
       } catch (e) {}
     }
-    return {
-      frameSkip: 0,
-      showFpsCounter: false,
-      volume: 1.0,
-      fastForward: 1.0,
-      autoMuteOnFastForward: true,
-      dpadScale: 1.2,
-      btnScale: 1.2,
-      lrScale: 1.2,
-      sysBtnScale: 1.0,
-      theme: 'indigo',
-      fullscreenMode: false,
-      screenScale: 3
-    };
+    return defaultSettings;
   });
 
   const showSettingsRef = useRef(false);
@@ -96,11 +86,6 @@ export default function Emulator() {
     };
   }, [settings.theme]);
 
-  const handleSettingChange = (key, value) => {
-    const nextSettings = { ...settings, [key]: value };
-    setSettings(nextSettings);
-    localStorage.setItem('gba-settings', JSON.stringify(nextSettings));
-    
   const handleControlPositionChange = (id, pos) => {
     const currentLayouts = settings.customLayouts || {};
     const nextSettings = { ...settings, customLayouts: { ...currentLayouts, [id]: pos } };
@@ -108,11 +93,16 @@ export default function Emulator() {
     localStorage.setItem('gba-settings', JSON.stringify(nextSettings));
   };
 
+  const handleSettingChange = (key, value) => {
+    const nextSettings = { ...settings, [key]: value };
+    setSettings(nextSettings);
+    localStorage.setItem('gba-settings', JSON.stringify(nextSettings));
     
     if (emulator) {
       try {
         if (key === 'volume') {
           if (nextSettings.autoMuteOnFastForward && Number(nextSettings.fastForward) > 1) {
+
             emulator.setVolume(0);
           } else {
             emulator.setVolume(Number(value));
@@ -584,6 +574,8 @@ export default function Emulator() {
 
     if (!confirmReset) return;
 
+    setSettings(defaultSettings);
+
     try {
       if (emulatorRef.current) {
         try {
@@ -796,12 +788,21 @@ export default function Emulator() {
 
       {isEditLayoutMode && (
         <div style={{ position: 'fixed', top: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 999999, display: 'flex', gap: '10px' }}>
-          <button className="save-action-btn" style={{ padding: '10px 20px', background: '#4ade80', color: '#000', fontWeight: 'bold' }} onClick={() => setIsEditLayoutMode(false)}>DONE EDITING</button>
+          <button className="save-action-btn" style={{ padding: '10px 20px', background: '#4ade80', color: '#000', fontWeight: 'bold' }} onClick={() => {
+            setIsEditLayoutMode(false);
+            if (emulator && romLoadedRef.current) {
+              try { emulator.resumeGame(); } catch (e) {}
+            }
+          }}>DONE EDITING</button>
           <button className="save-action-btn danger-btn" style={{ padding: '10px 20px' }} onClick={() => {
             const nextSettings = { ...settings };
             delete nextSettings.customLayouts;
             setSettings(nextSettings);
             localStorage.setItem('gba-settings', JSON.stringify(nextSettings));
+            setIsEditLayoutMode(false);
+            if (emulator && romLoadedRef.current) {
+              try { emulator.resumeGame(); } catch (e) {}
+            }
           }}>RESET LAYOUT</button>
         </div>
       )}
@@ -967,36 +968,32 @@ export default function Emulator() {
                           </select>
                         </div>
 
-                        <div className="setting-row checkbox-row">
+                        <div className="setting-row checkbox-row" style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: '0.8rem' }}>
                           <label className="checkbox-label">
                             <input 
                               type="checkbox" 
                               checked={settings.autoMuteOnFastForward} 
                               onChange={(e) => handleSettingChange('autoMuteOnFastForward', e.target.checked)} 
                             />
-                            AUTO MUTE ON FF
+                            Auto Mute
                           </label>
-                        </div>
-
-                        <div className="setting-row checkbox-row">
+                          <span>&nbsp;&nbsp;</span>
                           <label className="checkbox-label">
                             <input 
                               type="checkbox" 
                               checked={settings.showFpsCounter} 
                               onChange={(e) => handleSettingChange('showFpsCounter', e.target.checked)} 
                             />
-                            SHOW FPS
+                            Show FPS
                           </label>
-                        </div>
-
-                        <div className="setting-row checkbox-row">
+                          <span>&nbsp;&nbsp;</span>
                           <label className="checkbox-label">
                             <input 
                               type="checkbox" 
                               checked={settings.fullscreenMode} 
                               onChange={(e) => handleSettingChange('fullscreenMode', e.target.checked)} 
                             />
-                            FULLSCREEN (KEYBOARD ONLY)
+                            FULLSCREEN
                           </label>
                         </div>
 
@@ -1102,7 +1099,7 @@ export default function Emulator() {
                               style={{ display: 'none' }} 
                               onChange={handleImportSave} 
                             />
-                            <button className="save-action-btn" onClick={() => { setIsEditLayoutMode(true); setShowSettings(false); }} style={{ marginTop: '0.4rem', background: 'var(--gba-indigo-light)', color: '#fff' }}>
+                            <button className="save-action-btn" onClick={() => { setIsEditLayoutMode(true); setShowTouchControls(true); setShowSettings(false); }} style={{ marginTop: '0.4rem', background: 'var(--gba-indigo-light)', color: '#fff' }}>
                               EDIT CONTROLS LAYOUT
                             </button>
                             <button className="save-action-btn danger-btn" onClick={handleFactoryReset} style={{ marginTop: '0.4rem' }}>

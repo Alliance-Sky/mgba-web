@@ -29,6 +29,8 @@ body {
   min-height: 100dvh;
   overflow: hidden;
   user-select: none;
+  touch-action: none;
+  overscroll-behavior: none;
 }
 
 #root {
@@ -146,6 +148,7 @@ header {
 
 .emulator-container:not(.game-playing) {
   padding: 0;
+  justify-content: center;
 }
 
 .screen-bezel {
@@ -680,6 +683,8 @@ canvas {
     box-shadow: none;
     border-radius: 0;
     max-width: 100vw;
+    flex: 1;
+    height: 100%;
   }
   .screen-bezel {
     border-radius: 0;
@@ -843,6 +848,8 @@ canvas {
   animation: screenSettingsFadeIn 0.12s ease-out;
   border-radius: 0;
   overflow-y: auto;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
 }
 
 .screen-settings-header,

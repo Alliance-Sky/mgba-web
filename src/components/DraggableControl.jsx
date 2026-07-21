@@ -47,7 +47,6 @@ export default function DraggableControl({
     // Don't drag if they didn't left click (or touch)
     if (e.button !== undefined && e.button !== 0) return;
 
-    e.preventDefault();
     e.stopPropagation();
     setIsDragging(true);
 
@@ -58,7 +57,6 @@ export default function DraggableControl({
 
   const handlePointerMove = (e) => {
     if (!isDragging || !isEditMode) return;
-    e.preventDefault();
     e.stopPropagation();
 
     // Get the parent container's bounding rect
@@ -78,7 +76,6 @@ export default function DraggableControl({
 
   const handlePointerUp = (e) => {
     if (!isDragging || !isEditMode) return;
-    e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
     
@@ -86,10 +83,17 @@ export default function DraggableControl({
     if (el) {
       el.releasePointerCapture(e.pointerId);
     }
-
+    setComputed(false); // Let it rely on customPos now
+    
     // Commit position to parent
     if (onPositionChange) {
       onPositionChange(id, localPos);
+    }
+  };
+
+  const handleTouch = (e) => {
+    if (isEditMode) {
+      e.stopPropagation();
     }
   };
 
@@ -114,6 +118,9 @@ export default function DraggableControl({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
+      onTouchStart={handleTouch}
+      onTouchMove={handleTouch}
+      onTouchEnd={handleTouch}
       style={{
         position: isReadyToAbsolute ? 'absolute' : 'relative',
         left: isReadyToAbsolute ? `${localPos.x}%` : 'auto',
