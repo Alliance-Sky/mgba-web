@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mGBA from '@thenick775/mgba-wasm';
-import { FolderOpen, Settings, X } from 'lucide-react';
+import { FolderOpen, Settings, X, Edit3 } from 'lucide-react';
+import CustomControlsOverlay from './CustomControlsOverlay';
 
 export default function Emulator() {
   const canvasRef = useRef(null);
@@ -15,6 +16,17 @@ export default function Emulator() {
   const [currentFps, setCurrentFps] = useState(0);
   const frameCountRef = useRef(0);
   const [showTouchControls, setShowTouchControls] = useState(false);
+  const [isEditLayoutMode, setIsEditLayoutMode] = useState(false);
+  const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
+
+  useEffect(() => {
+    const handleResize = () => setIsLandscape(window.innerWidth > window.innerHeight);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const getLayoutId = (base) => `${base}-${isLandscape ? 'landscape' : 'portrait'}`;
+
   
   const [settings, setSettings] = useState(() => {
     const saved = localStorage.getItem('gba-settings');
@@ -88,6 +100,14 @@ export default function Emulator() {
     const nextSettings = { ...settings, [key]: value };
     setSettings(nextSettings);
     localStorage.setItem('gba-settings', JSON.stringify(nextSettings));
+    
+  const handleControlPositionChange = (id, pos) => {
+    const currentLayouts = settings.customLayouts || {};
+    const nextSettings = { ...settings, customLayouts: { ...currentLayouts, [id]: pos } };
+    setSettings(nextSettings);
+    localStorage.setItem('gba-settings', JSON.stringify(nextSettings));
+  };
+
     
     if (emulator) {
       try {
@@ -774,6 +794,18 @@ export default function Emulator() {
         </div>
       )}
 
+      {isEditLayoutMode && (
+        <div style={{ position: 'fixed', top: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 999999, display: 'flex', gap: '10px' }}>
+          <button className="save-action-btn" style={{ padding: '10px 20px', background: '#4ade80', color: '#000', fontWeight: 'bold' }} onClick={() => setIsEditLayoutMode(false)}>DONE EDITING</button>
+          <button className="save-action-btn danger-btn" style={{ padding: '10px 20px' }} onClick={() => {
+            const nextSettings = { ...settings };
+            delete nextSettings.customLayouts;
+            setSettings(nextSettings);
+            localStorage.setItem('gba-settings', JSON.stringify(nextSettings));
+          }}>RESET LAYOUT</button>
+        </div>
+      )}
+
       {/* Settings are now integrated directly inside the GBA screen bezel overlay */}
 
       <div 
@@ -789,8 +821,19 @@ export default function Emulator() {
         onTouchEnd={handleConsoleTouch}
         onTouchCancel={handleConsoleTouch}
       >
+          {/* Custom Controls Overlay */}
+          {showTouchControls && (isEditLayoutMode || Object.keys(settings.customLayouts || {}).length > 0) && (
+            <CustomControlsOverlay
+              isEditMode={isEditLayoutMode}
+              settings={settings}
+              onPositionChange={handleControlPositionChange}
+              handleOpenSettings={handleOpenSettings}
+              getLayoutId={getLayoutId}
+            />
+          )}
+
           {/* Left Wing (D-pad) */}
-          {showTouchControls && (
+          {showTouchControls && !(isEditLayoutMode || Object.keys(settings.customLayouts || {}).length > 0) && (
             <div className="console-wing wing-left">
               <button className="bumper-btn bumper-l mobile-landscape-only" data-gba-btn="L" style={{ display: 'none' }}>L</button>
               <div className="left-controls" style={{ margin: '1rem 0', minHeight: '110px' }}>
@@ -1059,6 +1102,9 @@ export default function Emulator() {
                               style={{ display: 'none' }} 
                               onChange={handleImportSave} 
                             />
+                            <button className="save-action-btn" onClick={() => { setIsEditLayoutMode(true); setShowSettings(false); }} style={{ marginTop: '0.4rem', background: 'var(--gba-indigo-light)', color: '#fff' }}>
+                              EDIT CONTROLS LAYOUT
+                            </button>
                             <button className="save-action-btn danger-btn" onClick={handleFactoryReset} style={{ marginTop: '0.4rem' }}>
                               FACTORY RESET APP
                             </button>
@@ -1073,7 +1119,7 @@ export default function Emulator() {
             </div>
 
             {/* System buttons + L/R bumpers on the same line (centered below screen lens) */}
-            {showTouchControls && (
+            {showTouchControls && !(isEditLayoutMode || Object.keys(settings.customLayouts || {}).length > 0) && (
               <div className="menu-buttons-container hide-on-mobile-landscape">
                 <button className="bumper-btn bumper-l" data-gba-btn="L">L</button>
                 
@@ -1098,7 +1144,7 @@ export default function Emulator() {
           </div>
 
           {/* Right Wing (A/B buttons + speaker) */}
-          {showTouchControls && (
+          {showTouchControls && !(isEditLayoutMode || Object.keys(settings.customLayouts || {}).length > 0) && (
             <div className="console-wing wing-right">
               <button className="bumper-btn bumper-r mobile-landscape-only" data-gba-btn="R" style={{ display: 'none' }}>R</button>
               <div className="right-controls" style={{ margin: '1rem 0', minHeight: '110px' }}>
