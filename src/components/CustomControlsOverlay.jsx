@@ -6,9 +6,10 @@ export default function CustomControlsOverlay({
   settings, 
   onPositionChange, 
   handleOpenSettings,
-  getLayoutId
+  getLayoutId,
+  isLandscape
 }) {
-  const defaults = {
+  const portraitDefaults = {
     'dpad': { x: 20, y: 70 },
     'ab': { x: 80, y: 70 },
     'l': { x: 10, y: 20 },
@@ -17,6 +18,18 @@ export default function CustomControlsOverlay({
     'menu': { x: 50, y: 90 },
     'start': { x: 70, y: 90 },
   };
+
+  const landscapeDefaults = {
+    'dpad': { x: 15, y: 55 },
+    'ab': { x: 85, y: 55 },
+    'l': { x: 15, y: 20 },
+    'r': { x: 85, y: 20 },
+    'select': { x: 35, y: 85 },
+    'menu': { x: 50, y: 85 },
+    'start': { x: 65, y: 85 },
+  };
+
+  const defaults = isLandscape ? landscapeDefaults : portraitDefaults;
 
   const getPos = (id) => settings.customLayouts?.[getLayoutId(id)] || defaults[id];
 

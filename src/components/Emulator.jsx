@@ -56,6 +56,9 @@ export default function Emulator() {
     return defaultSettings;
   });
 
+  const currentOrientationSuffix = isLandscape ? 'landscape' : 'portrait';
+  const hasCustomLayoutForCurrentOrientation = Object.keys(settings.customLayouts || {}).some(k => k.endsWith(currentOrientationSuffix));
+
   const showSettingsRef = useRef(false);
   const emulatorRef = useRef(null);
   const romLoadedRef = useRef(false);
@@ -823,18 +826,19 @@ export default function Emulator() {
         onTouchCancel={handleConsoleTouch}
       >
           {/* Custom Controls Overlay */}
-          {showTouchControls && (isEditLayoutMode || Object.keys(settings.customLayouts || {}).length > 0) && (
+          {showTouchControls && (isEditLayoutMode || hasCustomLayoutForCurrentOrientation) && (
             <CustomControlsOverlay
               isEditMode={isEditLayoutMode}
               settings={settings}
               onPositionChange={handleControlPositionChange}
               handleOpenSettings={handleOpenSettings}
               getLayoutId={getLayoutId}
+              isLandscape={isLandscape}
             />
           )}
 
           {/* Left Wing (D-pad) */}
-          {showTouchControls && !(isEditLayoutMode || Object.keys(settings.customLayouts || {}).length > 0) && (
+          {showTouchControls && !(isEditLayoutMode || hasCustomLayoutForCurrentOrientation) && (
             <div className="console-wing wing-left">
               <button className="bumper-btn bumper-l mobile-landscape-only" data-gba-btn="L" style={{ display: 'none' }}>L</button>
               <div className="left-controls" style={{ margin: '1rem 0', minHeight: '110px' }}>
@@ -1116,7 +1120,7 @@ export default function Emulator() {
             </div>
 
             {/* System buttons + L/R bumpers on the same line (centered below screen lens) */}
-            {showTouchControls && !(isEditLayoutMode || Object.keys(settings.customLayouts || {}).length > 0) && (
+            {showTouchControls && !(isEditLayoutMode || hasCustomLayoutForCurrentOrientation) && (
               <div className="menu-buttons-container hide-on-mobile-landscape">
                 <button className="bumper-btn bumper-l" data-gba-btn="L">L</button>
                 
@@ -1141,7 +1145,7 @@ export default function Emulator() {
           </div>
 
           {/* Right Wing (A/B buttons + speaker) */}
-          {showTouchControls && !(isEditLayoutMode || Object.keys(settings.customLayouts || {}).length > 0) && (
+          {showTouchControls && !(isEditLayoutMode || hasCustomLayoutForCurrentOrientation) && (
             <div className="console-wing wing-right">
               <button className="bumper-btn bumper-r mobile-landscape-only" data-gba-btn="R" style={{ display: 'none' }}>R</button>
               <div className="right-controls" style={{ margin: '1rem 0', minHeight: '110px' }}>
