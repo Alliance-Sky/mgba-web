@@ -458,33 +458,6 @@ export default function Emulator() {
     });
   };
 
-  const handleExportSave = () => {
-    if (!emulator) return;
-    try {
-      const saveBytes = emulator.getSave();
-      if (!saveBytes || saveBytes.length === 0) {
-        alert("No in-game battery save data found. Make sure you save inside the game first!");
-        return;
-      }
-      
-      const romName = emulator.gameName ? emulator.gameName.split('/').pop() : 'game';
-      const saveName = romName.replace(/\.(gba|gb|gbc)$/i, '') + '.sav';
-
-      const blob = new Blob([saveBytes], { type: 'application/octet-stream' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = saveName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (e) {
-      console.error("Failed to export save:", e);
-      alert("Failed to export battery save data.");
-    }
-  };
-
   const handleExportState = () => {
     if (!emulator) return;
     try {
@@ -523,13 +496,11 @@ export default function Emulator() {
     event.target.value = '';
     if (!file || !emulator) return;
 
-    const extMatch = file.name.match(/\.(sav|ss\d+)$/i);
+    const extMatch = file.name.match(/\.ss\d+$/i);
     if (!extMatch) {
-      alert("Please select a valid battery save (.sav) or save state (.ss0, .ss1, etc) file!");
+      alert("Please select a valid save state (.ss0, .ss1, etc) file!");
       return;
     }
-    const ext = extMatch[1].toLowerCase();
-    const isSaveState = ext.startsWith('ss');
 
     const romName = emulator.gameName ? emulator.gameName.split('/').pop() : '';
     if (!romName) {
@@ -537,61 +508,35 @@ export default function Emulator() {
       return;
     }
 
-    if (isSaveState) {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        try {
-          const data = new Uint8Array(e.target.result);
-          if (typeof emulator.uploadAutoSaveState === 'function') {
-            await emulator.uploadAutoSaveState(emulator.autoSaveStateName, data);
-            const success = emulator.loadAutoSaveState();
-            if (success) {
-              try { await emulator.FSSync(); } catch (e) {}
-              handleCloseSettings();
-            } else {
-              alert("Failed to load save state! The file might be corrupt or for a different game.");
-            }
-          } else {
-            alert("Save state import is not supported in this environment.");
-          }
-        } catch (err) {
-          console.error("Failed to import auto save state:", err);
-          alert("Error importing save state.");
-        }
-      };
-      reader.readAsArrayBuffer(file);
-      return;
-    }
-
-    const targetSaveName = romName.replace(/\.(gba|gb|gbc)$/i, '') + '.sav';
-    const renamedFile = new File([file], targetSaveName, { type: file.type });
-    const romPath = emulator.gameName;
-
-    try {
-      emulator.quitGame();
-    } catch (e) {
-      console.warn("quitGame before import:", e);
-    }
-
-    emulator.uploadSaveOrSaveState(renamedFile, async () => {
-      emulator.loadGame(romPath);
-      applyActiveSettings(emulator);
+    const reader = new FileReader();
+    reader.onload = async (e) => {
       try {
-        await emulator.FSSync();
-        console.log("Imported save synced to IndexedDB.");
+        const data = new Uint8Array(e.target.result);
+        if (typeof emulator.uploadAutoSaveState === 'function') {
+          await emulator.uploadAutoSaveState(emulator.autoSaveStateName, data);
+          const success = emulator.loadAutoSaveState();
+          if (success) {
+            try { await emulator.FSSync(); } catch (e) {}
+            handleCloseSettings();
+          } else {
+            alert("Failed to load save state! The file might be corrupt or for a different game.");
+          }
+        } else {
+          alert("Save state import is not supported in this environment.");
+        }
       } catch (err) {
-        console.error("Post-import sync failed:", err);
+        console.error("Failed to import auto save state:", err);
+        alert("Error importing save state.");
       }
-      handleCloseSettings();
-    });
+    };
+    reader.readAsArrayBuffer(file);
   };
 
   const handleFactoryReset = async () => {
     const confirmReset = window.confirm(
       "FACTORY RESET APP\n\n" +
       "This will permanently delete:\n" +
-      "• All in-game save files (.SAV)\n" +
-      "• All save states (.SS1, etc.)\n" +
+      "• All save states and in-game progress\n" +
       "• Your customized settings (themes, scales, volume, etc.)\n\n" +
       "Are you absolutely sure you want to proceed? This cannot be undone."
     );
@@ -1115,19 +1060,16 @@ export default function Emulator() {
                         <div className="setting-row">
                           <label>SAVE MANAGEMENT</label>
                           <div className="save-actions-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                            <button className="save-action-btn" onClick={handleExportSave}>
-                              EXPORT BATTERY SAVE (.SAV)
-                            </button>
                             <button className="save-action-btn" onClick={handleExportState}>
                               EXPORT SAVE STATE (.SS1)
                             </button>
                             <button className="save-action-btn" onClick={() => document.getElementById('save-import-file').click()}>
-                              IMPORT DATA (.SAV / .SSX)
+                              IMPORT SAVE STATE (.SS1 / .SSX)
                             </button>
                             <input 
                               type="file" 
                               id="save-import-file" 
-                              accept=".sav" 
+                              accept=".ss0,.ss1,.ss2,.ss3,.ss4,.ss5,.ss6,.ss7,.ss8,.ss9" 
                               style={{ display: 'none' }} 
                               onChange={handleImportSave} 
                             />

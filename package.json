@@ -1,6 +1,6 @@
 {
   "name": "mgba-web",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A web-based Game Boy (GB), Game Boy Color (GBC), and Game Boy Advance (GBA) emulator",
   "main": "index.js",
   "scripts": {
