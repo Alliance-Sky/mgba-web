@@ -78,6 +78,25 @@ export default function Emulator() {
   useEffect(() => { romLoadedRef.current = romLoaded; }, [romLoaded]);
 
   useEffect(() => {
+    const handleVisibilityChange = () => {
+      const emu = emulatorRef.current;
+      const isLoaded = romLoadedRef.current;
+      if (document.hidden) {
+        if (emu && isLoaded) {
+          try { emu.pauseGame(); } catch (e) {}
+          try { emu.FSSync().catch(e => console.error("Visibility sync failed:", e)); } catch (e) {}
+        }
+      } else {
+        if (emu && isLoaded && !showSettingsRef.current) {
+          try { emu.resumeGame(); } catch (e) {}
+        }
+      }
+    };
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => window.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
+  useEffect(() => {
     const theme = settings.theme ?? 'indigo';
     const themeClass = `theme-${theme}`;
     const classesToRemove = Array.from(document.body.classList).filter(c => c.startsWith('theme-'));
@@ -444,7 +463,7 @@ export default function Emulator() {
     try {
       const saveBytes = emulator.getSave();
       if (!saveBytes || saveBytes.length === 0) {
-        alert("No in-game save data found. Make sure you save inside the game first!");
+        alert("No in-game battery save data found. Make sure you save inside the game first!");
         return;
       }
       
@@ -462,7 +481,7 @@ export default function Emulator() {
       URL.revokeObjectURL(url);
     } catch (e) {
       console.error("Failed to export save:", e);
-      alert("Failed to export save data.");
+      alert("Failed to export battery save data.");
     }
   };
 
@@ -506,7 +525,7 @@ export default function Emulator() {
 
     const extMatch = file.name.match(/\.(sav|ss\d+)$/i);
     if (!extMatch) {
-      alert("Please select a valid .sav or save state (.ss0, .ss1, etc) file!");
+      alert("Please select a valid battery save (.sav) or save state (.ss0, .ss1, etc) file!");
       return;
     }
     const ext = extMatch[1].toLowerCase();
@@ -514,7 +533,7 @@ export default function Emulator() {
 
     const romName = emulator.gameName ? emulator.gameName.split('/').pop() : '';
     if (!romName) {
-      alert("No active game to import save for!");
+      alert("No active game to import data for!");
       return;
     }
 
@@ -527,6 +546,7 @@ export default function Emulator() {
             await emulator.uploadAutoSaveState(emulator.autoSaveStateName, data);
             const success = emulator.loadAutoSaveState();
             if (success) {
+              try { await emulator.FSSync(); } catch (e) {}
               handleCloseSettings();
             } else {
               alert("Failed to load save state! The file might be corrupt or for a different game.");
@@ -553,15 +573,16 @@ export default function Emulator() {
       console.warn("quitGame before import:", e);
     }
 
-    emulator.uploadSaveOrSaveState(renamedFile, () => {
-      setTimeout(() => {
-        emulator.loadGame(romPath);
-        applyActiveSettings(emulator);
-        handleCloseSettings();
-        emulator.FSSync()
-          .then(() => console.log("Imported save synced to IndexedDB."))
-          .catch((err) => console.error("Post-import sync failed:", err));
-      }, 200);
+    emulator.uploadSaveOrSaveState(renamedFile, async () => {
+      emulator.loadGame(romPath);
+      applyActiveSettings(emulator);
+      try {
+        await emulator.FSSync();
+        console.log("Imported save synced to IndexedDB.");
+      } catch (err) {
+        console.error("Post-import sync failed:", err);
+      }
+      handleCloseSettings();
     });
   };
 
@@ -799,14 +820,21 @@ export default function Emulator() {
           }}>DONE EDITING</button>
           <button className="save-action-btn danger-btn" style={{ padding: '10px 20px' }} onClick={() => {
             const nextSettings = { ...settings };
-            delete nextSettings.customLayouts;
+            const orientationSuffix = isLandscape ? 'landscape' : 'portrait';
+            if (nextSettings.customLayouts) {
+              Object.keys(nextSettings.customLayouts).forEach(key => {
+                if (key.endsWith(orientationSuffix)) {
+                  delete nextSettings.customLayouts[key];
+                }
+              });
+            }
             setSettings(nextSettings);
             localStorage.setItem('gba-settings', JSON.stringify(nextSettings));
             setIsEditLayoutMode(false);
             if (emulator && romLoadedRef.current) {
               try { emulator.resumeGame(); } catch (e) {}
             }
-          }}>RESET LAYOUT</button>
+          }}>RESET {isLandscape ? 'LANDSCAPE' : 'PORTRAIT'} LAYOUT</button>
         </div>
       )}
 
@@ -1088,13 +1116,13 @@ export default function Emulator() {
                           <label>SAVE MANAGEMENT</label>
                           <div className="save-actions-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                             <button className="save-action-btn" onClick={handleExportSave}>
-                              EXPORT SAVE (.SAV)
+                              EXPORT BATTERY SAVE (.SAV)
                             </button>
                             <button className="save-action-btn" onClick={handleExportState}>
-                              EXPORT STATE (.SS1)
+                              EXPORT SAVE STATE (.SS1)
                             </button>
                             <button className="save-action-btn" onClick={() => document.getElementById('save-import-file').click()}>
-                              IMPORT SAVE (.SAV / .SSX)
+                              IMPORT DATA (.SAV / .SSX)
                             </button>
                             <input 
                               type="file" 
