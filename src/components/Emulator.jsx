@@ -615,7 +615,11 @@ export default function Emulator() {
     const updateBounds = () => {
       const bounds = new Map();
       document.querySelectorAll('[data-gba-btn]').forEach(el => {
-        bounds.set(el.getAttribute('data-gba-btn'), el.getBoundingClientRect());
+        const rect = el.getBoundingClientRect();
+        // Ignore hidden elements (like the landscape buttons when in portrait)
+        if (rect.width > 0 && rect.height > 0) {
+          bounds.set(el.getAttribute('data-gba-btn'), rect);
+        }
       });
       buttonBoundsRef.current = bounds;
     };
