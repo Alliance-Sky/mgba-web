@@ -2,9 +2,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import mGBA from '@thenick775/mgba-wasm';
 import { FolderOpen, Settings, X, Edit3 } from 'lucide-react';
 import CustomControlsOverlay from './CustomControlsOverlay';
+import SettingsOverlay from './SettingsOverlay';
+import FpsCounter from './FpsCounter';
+import useDebounce from '../hooks/useDebounce';
 
 export default function Emulator() {
   const canvasRef = useRef(null);
+  const romUploadRef = useRef(null);
   const [emulator, setEmulator] = useState(null);
   const [isReady, setIsReady] = useState(false);
   const [romLoaded, setRomLoaded] = useState(false);
@@ -55,6 +59,11 @@ export default function Emulator() {
     }
     return defaultSettings;
   });
+
+  const debouncedSettings = useDebounce(settings, 300);
+  useEffect(() => {
+    localStorage.setItem('gba-settings', JSON.stringify(debouncedSettings));
+  }, [debouncedSettings]);
 
   const currentOrientationSuffix = isLandscape ? 'landscape' : 'portrait';
   const hasCustomLayoutForCurrentOrientation = Object.keys(settings.customLayouts || {}).some(k => k.endsWith(currentOrientationSuffix));
@@ -112,13 +121,11 @@ export default function Emulator() {
     const currentLayouts = settings.customLayouts || {};
     const nextSettings = { ...settings, customLayouts: { ...currentLayouts, [id]: pos } };
     setSettings(nextSettings);
-    localStorage.setItem('gba-settings', JSON.stringify(nextSettings));
   };
 
   const handleSettingChange = (key, value) => {
     const nextSettings = { ...settings, [key]: value };
     setSettings(nextSettings);
-    localStorage.setItem('gba-settings', JSON.stringify(nextSettings));
     
     if (emulator) {
       try {
@@ -199,59 +206,8 @@ export default function Emulator() {
     }
   };
 
-  // Track FPS dynamically by monkey-patching canvas drawing contexts
+  // Track FPS dynamically
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const originalGetContext = canvas.getContext;
-    
-    canvas.getContext = function(type, attributes) {
-      const ctx = originalGetContext.call(this, type, attributes);
-      if (!ctx) return ctx;
-
-      // Wrap 2D context
-      if (type === '2d' && !ctx._wrapped) {
-        ctx._wrapped = true;
-        const originalPutImageData = ctx.putImageData;
-        ctx.putImageData = function(...args) {
-          frameCountRef.current++;
-          return originalPutImageData.apply(this, args);
-        };
-      }
-
-      // Wrap WebGL / WebGL2 context
-      if ((type === 'webgl' || type === 'webgl2') && !ctx._wrapped) {
-        ctx._wrapped = true;
-        
-        const originalTexImage2D = ctx.texImage2D;
-        ctx.texImage2D = function(...args) {
-          const width = args[3];
-          const height = args[4];
-          if ((width === 240 && height === 160) || (width === 160 && height === 144)) {
-            frameCountRef.current++;
-          } else if (args.length < 5) {
-            frameCountRef.current++;
-          }
-          return originalTexImage2D.apply(this, args);
-        };
-
-        const originalTexSubImage2D = ctx.texSubImage2D;
-        ctx.texSubImage2D = function(...args) {
-          const width = args[4];
-          const height = args[5];
-          if ((width === 240 && height === 160) || (width === 160 && height === 144)) {
-            frameCountRef.current++;
-          } else if (args.length < 6) {
-            frameCountRef.current++;
-          }
-          return originalTexSubImage2D.apply(this, args);
-        };
-      }
-
-      return ctx;
-    };
-
     let lastTime = performance.now();
     const interval = setInterval(() => {
       const now = performance.now();
@@ -265,7 +221,6 @@ export default function Emulator() {
     }, 1000);
 
     return () => {
-      canvas.getContext = originalGetContext;
       clearInterval(interval);
     };
   }, []);
@@ -317,6 +272,9 @@ export default function Emulator() {
                 Module.FSSync()
                   .then(() => console.log("Auto-saved game state to IndexedDB!"))
                   .catch((e) => console.error("Auto-save sync failed:", e));
+              },
+              videoFrameEndedCallback: () => {
+                frameCountRef.current++;
               }
             });
           } catch (e) {
@@ -338,20 +296,21 @@ export default function Emulator() {
     setShowTouchControls(touchCapable);
 
     const KEY_MAP = {
-      'arrowup': 'Up',
-      'arrowdown': 'Down',
-      'arrowleft': 'Left',
-      'arrowright': 'Right',
-      'z': 'A',
-      'x': 'B',
-      'q': 'L',
-      'w': 'R',
-      'enter': 'Start',
-      'shift': 'Select'
+      'ArrowUp': 'Up',
+      'ArrowDown': 'Down',
+      'ArrowLeft': 'Left',
+      'ArrowRight': 'Right',
+      'KeyZ': 'A',
+      'KeyX': 'B',
+      'KeyQ': 'L',
+      'KeyW': 'R',
+      'Enter': 'Start',
+      'ShiftLeft': 'Select',
+      'ShiftRight': 'Select'
     };
 
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
+      if (e.code === 'Escape') {
         e.preventDefault();
         if (showSettingsRef.current) {
           handleCloseSettings();
@@ -361,7 +320,7 @@ export default function Emulator() {
         return;
       }
 
-      const btn = KEY_MAP[e.key.toLowerCase()];
+      const btn = KEY_MAP[e.code];
       if (btn) {
         visualPress(btn);
       }
@@ -370,7 +329,7 @@ export default function Emulator() {
     };
 
     const handleKeyUp = (e) => {
-      const btn = KEY_MAP[e.key.toLowerCase()];
+      const btn = KEY_MAP[e.code];
       if (btn) {
         visualRelease(btn);
       }
@@ -574,7 +533,9 @@ export default function Emulator() {
         try {
           const keys = await window.caches.keys();
           for (const key of keys) {
-            await window.caches.delete(key);
+            if (key.includes('mgba-web-cache-')) {
+              await window.caches.delete(key);
+            }
           }
         } catch (e) {
           console.error("Failed to clear Cache Storage:", e);
@@ -648,6 +609,24 @@ export default function Emulator() {
     visualRelease(btn);
   };
 
+  const buttonBoundsRef = useRef(new Map());
+
+  useEffect(() => {
+    const updateBounds = () => {
+      const bounds = new Map();
+      document.querySelectorAll('[data-gba-btn]').forEach(el => {
+        bounds.set(el.getAttribute('data-gba-btn'), el.getBoundingClientRect());
+      });
+      buttonBoundsRef.current = bounds;
+    };
+    
+    // Update after layout changes
+    updateBounds();
+    const handleResize = () => setTimeout(updateBounds, 100);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [showTouchControls, isEditLayoutMode, settings]);
+
   const handleConsoleTouch = (e) => {
     if (showSettings) return;
 
@@ -656,16 +635,23 @@ export default function Emulator() {
 
     for (let i = 0; i < e.touches.length; i++) {
       const touch = e.touches[i];
-      const element = document.elementFromPoint(touch.clientX, touch.clientY);
-      if (element) {
-        const buttonElement = element.closest('[data-gba-btn]');
-        if (buttonElement) {
-          const buttonName = buttonElement.getAttribute('data-gba-btn');
-          if (buttonName === 'Menu') {
-            touchedMenu = true;
-          } else if (buttonName) {
-            nextPressedButtons.add(buttonName);
-          }
+      let buttonName = null;
+      buttonBoundsRef.current.forEach((rect, btn) => {
+        if (
+          touch.clientX >= rect.left &&
+          touch.clientX <= rect.right &&
+          touch.clientY >= rect.top &&
+          touch.clientY <= rect.bottom
+        ) {
+          buttonName = btn;
+        }
+      });
+      
+      if (buttonName) {
+        if (buttonName === 'Menu') {
+          touchedMenu = true;
+        } else {
+          nextPressedButtons.add(buttonName);
         }
       }
     }
@@ -734,7 +720,7 @@ export default function Emulator() {
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
-          onClick={() => document.getElementById('rom-upload').click()}
+          onClick={() => romUploadRef.current && romUploadRef.current.click()}
         >
           {isReady ? (
             <>
@@ -743,6 +729,7 @@ export default function Emulator() {
               <span className="btn" style={{ fontSize: '1rem' }}>Drag & Drop or Browse File (.gba, .gb, .gbc, .zip)</span>
               <input 
                 type="file" 
+                ref={romUploadRef}
                 id="rom-upload" 
                 className="file-input" 
                 accept=".gba,.gb,.gbc,.zip"
@@ -845,244 +832,24 @@ export default function Emulator() {
                   ></canvas>
                   {videoMode === 'lcd-grid' && <div className="lcd-grid-overlay"></div>}
                   {settings.showFpsCounter && (
-                    <div className="fps-counter-overlay">
-                      FPS: {currentFps}
-                    </div>
+                    <FpsCounter currentFps={currentFps} />
                   )}
 
                   {showSettings && (
-                    <div 
-                      className={`screen-settings-overlay ${settingsInteractable ? 'interactable' : 'locked'}`}
-                      style={{ pointerEvents: settingsInteractable ? 'auto' : 'none' }}
-                      onTouchStart={(e) => e.stopPropagation()} 
-                      onTouchMove={(e) => e.stopPropagation()}
-                      onContextMenu={(e) => e.stopPropagation()}
-                    >
-                      <div className="screen-settings-header">
-                        <span>SYSTEM SETTINGS</span>
-                        <button className="screen-settings-close" onClick={handleCloseSettings}>
-                          <X size={14} />
-                        </button>
-                      </div>
-                      <div className="screen-settings-body">
-                        <div className="setting-row">
-                          <label>VOLUME</label>
-                          <div className="setting-input-group">
-                            <input 
-                              type="range" 
-                              min="0" 
-                              max="1" 
-                              step="0.1" 
-                              value={settings.volume} 
-                              onChange={(e) => handleSettingChange('volume', parseFloat(e.target.value))} 
-                            />
-                            <span className="value-label">{Math.round(settings.volume * 100)}%</span>
-                          </div>
-                        </div>
-
-                        <div className="setting-row">
-                          <label>SPEED</label>
-                          <select 
-                            value={settings.fastForward} 
-                            onChange={(e) => handleSettingChange('fastForward', e.target.value)}
-                          >
-                            <option value="1">1x (Normal)</option>
-                            <option value="2">2x</option>
-                            <option value="3">3x</option>
-                            <option value="4">4x</option>
-                            <option value="5">5x</option>
-                          </select>
-                        </div>
-
-                        <div className="setting-row">
-                          <label>SCREEN SIZE</label>
-                          <select 
-                            value={settings.screenScale || 3} 
-                            onChange={(e) => handleSettingChange('screenScale', parseInt(e.target.value))}
-                          >
-                            <option value="1">1x (240x160)</option>
-                            <option value="2">2x (480x320)</option>
-                            <option value="3">3x (720x480)</option>
-                            <option value="4">4x (960x640)</option>
-                            <option value="5">5x (1200x800)</option>
-                            <option value="6">6x (1440x960)</option>
-                            <option value="7">7x (1680x1120)</option>
-                            <option value="8">8x (1920x1280)</option>
-                            <option value="9">9x (2160x1440)</option>
-                            <option value="10">10x (2400x1600)</option>
-                          </select>
-                        </div>
-
-                        <div className="setting-row">
-                          <label>FRAME SKIP</label>
-                          <select 
-                            value={settings.frameSkip} 
-                            onChange={(e) => handleSettingChange('frameSkip', e.target.value)}
-                          >
-                            <option value="0">0 (None)</option>
-                            <option value="1">1 Frame</option>
-                            <option value="2">2 Frames</option>
-                          </select>
-                        </div>
-
-                        <div className="setting-row">
-                          <label>VIDEO FILTER</label>
-                          <select 
-                            value={videoMode} 
-                            onChange={(e) => {
-                              setVideoMode(e.target.value);
-                              localStorage.setItem('gba-video-mode', e.target.value);
-                            }}
-                          >
-                            <option value="none">None (Sharp Pixels)</option>
-                            <option value="amd-fsr">AMD Super Resolution 2.0</option>
-                            <option value="hq-crisp">HQ (Crisp Colors)</option>
-                            <option value="hq-smooth">HQ (Balanced Colors)</option>
-                            <option value="hq-vibrant">HQ (Vibrant Pops)</option>
-                            <option value="hq-soft">HQ (Soft Colors)</option>
-                            <option value="smooth">Bilinear (Smooth)</option>
-                            <option value="lcd-grid">LCD Subpixel Grid</option>
-                          </select>
-                        </div>
-
-                        <div className="setting-row checkbox-row" style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: '0.8rem' }}>
-                          <label className="checkbox-label">
-                            <input 
-                              type="checkbox" 
-                              checked={settings.autoMuteOnFastForward} 
-                              onChange={(e) => handleSettingChange('autoMuteOnFastForward', e.target.checked)} 
-                            />
-                            Auto Mute
-                          </label>
-                          <span>&nbsp;&nbsp;</span>
-                          <label className="checkbox-label">
-                            <input 
-                              type="checkbox" 
-                              checked={settings.showFpsCounter} 
-                              onChange={(e) => handleSettingChange('showFpsCounter', e.target.checked)} 
-                            />
-                            Show FPS
-                          </label>
-                          <span>&nbsp;&nbsp;</span>
-                          <label className="checkbox-label">
-                            <input 
-                              type="checkbox" 
-                              checked={settings.fullscreenMode} 
-                              onChange={(e) => handleSettingChange('fullscreenMode', e.target.checked)} 
-                            />
-                            FULLSCREEN
-                          </label>
-                        </div>
-
-                        <div className="setting-row">
-                          <label>DPAD SIZE</label>
-                          <div className="setting-input-group">
-                            <input 
-                              type="range" 
-                              min="0.7" 
-                              max="2" 
-                              step="0.05"
-                              value={settings.dpadScale ?? 1.2} 
-                              onChange={(e) => handleSettingChange('dpadScale', parseFloat(e.target.value))} 
-                            />
-                            <span className="value-label">{Math.round((settings.dpadScale ?? 1.2) * 100)}%</span>
-                          </div>
-                        </div>
-
-                        <div className="setting-row">
-                          <label>BUTTON SIZE</label>
-                          <div className="setting-input-group">
-                            <input 
-                              type="range" 
-                              min="0.7" 
-                              max="2" 
-                              step="0.05"
-                              value={settings.btnScale ?? 1.2} 
-                              onChange={(e) => handleSettingChange('btnScale', parseFloat(e.target.value))} 
-                            />
-                            <span className="value-label">{Math.round((settings.btnScale ?? 1.2) * 100)}%</span>
-                          </div>
-                        </div>
-
-                        <div className="setting-row">
-                          <label>L/R BUMPER SIZE</label>
-                          <div className="setting-input-group">
-                            <input 
-                              type="range" 
-                              min="0.7" 
-                              max="2" 
-                              step="0.05"
-                              value={settings.lrScale ?? 1.2} 
-                              onChange={(e) => handleSettingChange('lrScale', parseFloat(e.target.value))} 
-                            />
-                            <span className="value-label">{Math.round((settings.lrScale ?? 1.2) * 100)}%</span>
-                          </div>
-                        </div>
-
-                        <div className="setting-row">
-                          <label>SYS BUTTON SIZE</label>
-                          <div className="setting-input-group">
-                            <input 
-                              type="range" 
-                              min="0.7" 
-                              max="2" 
-                              step="0.05"
-                              value={settings.sysBtnScale ?? 1.0} 
-                              onChange={(e) => handleSettingChange('sysBtnScale', parseFloat(e.target.value))} 
-                            />
-                            <span className="value-label">{Math.round((settings.sysBtnScale ?? 1.0) * 100)}%</span>
-                          </div>
-                        </div>
-
-                        <div className="setting-row">
-                          <label>CONSOLE THEME</label>
-                          <select 
-                            value={settings.theme ?? 'indigo'} 
-                            onChange={(e) => handleSettingChange('theme', e.target.value)}
-                          >
-                            <option value="indigo">Indigo (Classic)</option>
-                            <option value="glacier">Glacier (Clear Blue)</option>
-                            <option value="spice-orange">Spice Orange</option>
-                            <option value="charcoal">Charcoal Black</option>
-                            <option value="platinum">Platinum Silver</option>
-                            <option value="fuchsia">Fuchsia (Clear Pink)</option>
-                            <option value="midnight-blue">Midnight Blue (Clear)</option>
-                            <option value="pink">Pink Edition</option>
-                            <option value="gold">Gold Edition</option>
-                            <option value="famicom">Famicom 20th Anniversary</option>
-                            <option value="nes">NES Classic Edition</option>
-                            <option value="pikachu">Pikachu Yellow</option>
-                            <option value="charizard">Charizard Orange</option>
-                            <option value="celebi">Celebi Green</option>
-                          </select>
-                        </div>
-
-                        <div className="setting-row">
-                          <label>SAVE MANAGEMENT</label>
-                          <div className="save-actions-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                            <button className="save-action-btn" onClick={handleExportState}>
-                              EXPORT SAVE STATE (.SS1)
-                            </button>
-                            <button className="save-action-btn" onClick={() => document.getElementById('save-import-file').click()}>
-                              IMPORT SAVE STATE (.SS1 / .SSX)
-                            </button>
-                            <input 
-                              type="file" 
-                              id="save-import-file" 
-                              accept=".ss0,.ss1,.ss2,.ss3,.ss4,.ss5,.ss6,.ss7,.ss8,.ss9" 
-                              style={{ display: 'none' }} 
-                              onChange={handleImportSave} 
-                            />
-                            <button className="save-action-btn" onClick={() => { setIsEditLayoutMode(true); setShowTouchControls(true); setShowSettings(false); }} style={{ marginTop: '0.4rem', background: 'var(--gba-indigo-light)', color: '#fff' }}>
-                              EDIT CONTROLS LAYOUT
-                            </button>
-                            <button className="save-action-btn danger-btn" onClick={handleFactoryReset} style={{ marginTop: '0.4rem' }}>
-                              FACTORY RESET APP
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <SettingsOverlay 
+                      settings={settings}
+                      settingsInteractable={settingsInteractable}
+                      videoMode={videoMode}
+                      handleCloseSettings={handleCloseSettings}
+                      handleSettingChange={handleSettingChange}
+                      setVideoMode={setVideoMode}
+                      handleExportState={handleExportState}
+                      handleImportSave={handleImportSave}
+                      handleFactoryReset={handleFactoryReset}
+                      setIsEditLayoutMode={setIsEditLayoutMode}
+                      setShowTouchControls={setShowTouchControls}
+                      setShowSettings={setShowSettings}
+                    />
                   )}
                 </div>
 

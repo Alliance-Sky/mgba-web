@@ -15,7 +15,10 @@ const checkAppVersion = async () => {
     if (window.caches) {
       try {
         const keys = await window.caches.keys();
-        await Promise.all(keys.map(key => window.caches.delete(key)));
+        const deletePromises = keys
+          .filter(key => key.includes('mgba-web-cache-'))
+          .map(key => window.caches.delete(key));
+        await Promise.all(deletePromises);
         console.log('Cache Storage cleared.');
       } catch (e) {
         console.error('Failed to clear Cache Storage:', e);
