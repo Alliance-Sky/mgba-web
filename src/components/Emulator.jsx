@@ -622,10 +622,12 @@ export default function Emulator() {
     
     // Update after layout changes
     updateBounds();
+    // setTimeout to allow the browser to paint first for accurate layout metrics
     const handleResize = () => setTimeout(updateBounds, 100);
+    setTimeout(updateBounds, 100); // Also update after a slight delay on mount
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [showTouchControls, isEditLayoutMode, settings]);
+  }, [showTouchControls, isEditLayoutMode, settings, isReady, romLoaded]);
 
   const handleConsoleTouch = (e) => {
     if (showSettings) return;
